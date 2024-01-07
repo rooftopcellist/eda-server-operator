@@ -15,7 +15,7 @@ jobs:
 
       - name: Build Image
         run: |
-          IMG=eda-server-operator:main make docker-build
+          IMG=eda-server-operator:main make docker-buildx
 
       - name: Push To Quay
         uses: redhat-actions/push-to-registry@v2.1.1
