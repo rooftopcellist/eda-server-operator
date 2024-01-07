@@ -15,7 +15,12 @@ jobs:
 
       - name: Build Image
         run: |
-          IMG=eda-server-operator:main make docker-build
+          export PLATFORMS=linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
+          export IMG=eda-server-operator:main
+          docker buildx create --name project-v3-builder
+          docker buildx use project-v3-builder
+          docker buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile .
+          docker buildx rm project-v3-builder
 
       - name: Push To Quay
         uses: redhat-actions/push-to-registry@v2.1.1
