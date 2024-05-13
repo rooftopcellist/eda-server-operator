@@ -4,6 +4,7 @@
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
 VERSION ?= 0.0.1
+RELEASED_EDA_VERSION ?= 0.0.1
 
 # Default ENGINE for building the operator (default docker)
 ENGINE ?= docker
@@ -208,6 +209,8 @@ endif
 # These images MUST exist in a registry and be pull-able.
 BUNDLE_IMGS ?= $(BUNDLE_IMG)
 
+CSV_VERSION ?= v$(VERSION)
+
 # The image tag given to the resulting catalog image (e.g. make catalog-build CATALOG_IMG=example.com/operator-catalog:v0.2.0).
 CATALOG_IMG ?= $(IMAGE_TAG_BASE)-catalog:v$(VERSION)
 
@@ -221,7 +224,50 @@ endif
 # https://github.com/operator-framework/community-operators/blob/7f1438c/docs/packaging-operator.md#updating-your-existing-operator
 .PHONY: catalog-build
 catalog-build: opm ## Build a catalog image.
-	$(OPM) index add --container-tool $(ENGINE) --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT)
+
+	# -- File-based Catalog Image Build
+	# Make temp directory for eda-operator-catalog
+	mkdir -p eda-operator-catalog
+	touch eda-operator-catalog/existing-eda-catalog.json
+
+	# Generate an index with the FBC content and publish it in your registry:
+	$(OPM) generate dockerfile eda-operator-catalog
+	podman build -t "$(CATALOG_IMG)" -f ./eda-operator-catalog.Dockerfile .
+
+	# Clean up
+	rm -rf ./eda-operator-catalog.Dockerfile
+	rm -rf ./eda-operator-catalog
+
+# Build a catalog image by adding bundle images to an empty catalog using the operator package manager tool, 'opm'.
+# This recipe invokes 'opm' in 'semver' bundle add mode. For more information on add modes, see:
+# https://github.com/operator-framework/community-operators/blob/7f1438c/docs/packaging-operator.md#updating-your-existing-operator
+.PHONY: full-catalog-build
+RELEASED_EDA_VERSION ?= 0.0.1
+full-catalog-build: opm ## Build a catalog image.
+	# -- File-based Catalog Image Build
+	# Make temp directory for eda-operator-catalog
+	mkdir -p eda-operator-catalog
+	touch eda-operator-catalog/existing-eda-catalog.json
+
+	# Render the current index image to yaml
+	$(OPM) render quay.io/ansible/eda-server-catalog:latest > eda-operator-catalog/existing-eda-catalog.json
+
+	# Filter the existing FBC to only use the EDA Server Operator
+	jq 'select(.name == "eda-server-operator" or .package == "eda-server-operator")' eda-operator-catalog/existing-eda-catalog.json > eda-operator-catalog/filtered-eda-catalog.json
+
+	# Remove existing FBC to only use filtered FBC
+	rm -rf ./eda-operator-catalog/existing-eda-catalog.json
+
+	./assets/generate-fbc.sh $(OPM) $(BUNDLE_IMGS) $(RELEASED_EDA_VERSION) $(VERSION)
+
+
+	# Generate an index with the FBC content and publish it in your registry:
+	$(OPM) generate dockerfile eda-operator-catalog
+	podman build -t "$(CATALOG_IMG)" -f ./eda-operator-catalog.Dockerfile .
+
+	# Clean up
+	rm -rf ./eda-operator-catalog.Dockerfile
+	rm -rf ./eda-operator-catalog
 
 # Push the catalog image.
 .PHONY: catalog-push
