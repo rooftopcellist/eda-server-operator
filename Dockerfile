@@ -1,4 +1,4 @@
-FROM quay.io/operator-framework/ansible-operator:v1.27.0
+FROM quay.io/operator-framework/ansible-operator:v1.37.0
 
 ARG DEFAULT_EDA_VERSION
 ARG DEFAULT_EDA_UI_VERSION
