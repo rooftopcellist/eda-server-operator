@@ -12,6 +12,8 @@ spec:
   image_pull_secrets:
     - redhat-operators-pull-secret
   admin_password_secret: custom-admin-password
+  db_fields_encryption_secret: custom-db-fields-encryption-secret
+  postgres_configuration_secret: custom-pg-secret
 
   # Disable UI
   ui_disabled: false
@@ -34,7 +36,7 @@ spec:
       value: "Always"
 
   # CA Bundle
-  bundle_cacert_secret: my-custom-certs
+  # bundle_cacert_secret: my-custom-certs
 
   # -- Resource Requirements
   api:

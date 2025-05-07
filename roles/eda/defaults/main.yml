@@ -171,3 +171,7 @@ ipv6_disabled: false
 
 # idle_deployment - Scale down deployments to put EDA into an idle state
 idle_deployment: false
+
+# Allow additional parameters to be added to the pg_dump backup command when migrating from another deployment
+# see docs/migration/migration.md for more details
+pg_dump_suffix: ''

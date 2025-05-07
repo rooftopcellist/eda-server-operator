@@ -120,6 +120,13 @@ spec:
                 secretKeyRef:
                   name: '{{ __database_secret }}'
                   key: password
+{% if 'resources' in old_pg_config and old_pg_config['resources'] and 'password' in old_pg_config['resources'][0]['data'] %}
+            - name: PGPASSWORD_OLD
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ old_pg_config['resources'][0]['metadata']['name'] }}'
+                  key: password
+{% endif %}
           ports:
             - containerPort: {{ eda_postgres_port | default('5432')}}
               name: postgres-{{ supported_pg_version }}
