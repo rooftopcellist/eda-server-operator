@@ -69,6 +69,9 @@ Example of customization could be:
 ---
 spec:
   ...
+  postgres_extra_settings:
+    - setting: max_connections
+      value: 1000
   database:
     resource_requirements:
       requests:
@@ -82,9 +85,6 @@ spec:
         storage: 8Gi
     postgres_storage_class: fast-ssd
     postgres_data_volume_init: true
-    postgres_extra_settings:
-      - setting: max_connections
-        value: 1000
 ```
 
 > **Note**: The `postgres_extra_args` parameter is deprecated. Use `postgres_extra_settings` instead to configure PostgreSQL parameters through the postgresql.conf file.
